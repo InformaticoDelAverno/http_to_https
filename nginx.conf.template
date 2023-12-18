@@ -1,6 +1,27 @@
 events {}
 
 http {
+    log_format detailed '$remote_addr - $remote_user [$time_local] '
+                        '"$request" $status $body_bytes_sent '
+                        '"$http_referer" "$http_user_agent" '
+                        'ClientRequestHeaders: '
+                        '"User-Agent: $http_user_agent" '
+                        '"Cookie: $http_cookie" '
+                        '"Host: $http_host" '
+                        '"Accept: $http_accept" '
+                        '"Accept-Language: $http_accept_language" '
+                        '"Accept-Encoding: $http_accept_encoding" '
+                        'BackendRequest: "$upstream_addr" '
+                        'BackendResponseHeaders: '
+                        '"Content-Type: $upstream_http_content_type" '
+                        '"Content-Length: $upstream_http_content_length" '
+                        '"Location: $upstream_http_location"';
+    access_log /var/log/nginx/access.log detailed;
+    error_log /var/log/nginx/error.log debug;
+
+
+
+
     upstream backend {
         # Define el servidor o servidores backend
         server ${PROXY_PASS_URL};
@@ -13,10 +34,26 @@ http {
 
         location / {
             proxy_pass http://backend;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Mantener las cabeceras originales del cliente
+            proxy_set_header Host ${PROXY_PASS_URL};
+
+            # proxy_set_header X-Real-IP $remote_addr;
+            # proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            # proxy_set_header X-Forwarded-Proto $scheme;
+            # proxy_set_header Referer http://${PROXY_PASS_URL};
+
+            # No alterar la respuesta del servidor
+            proxy_redirect off;
+            proxy_buffering off;
+
+            # Opciones para manejo de conexiones
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+
+            # Reescribir URLs de HTTP a HTTPS
+            sub_filter 'http://' 'https://';
+            sub_filter_once off;
         }
     }
 }
