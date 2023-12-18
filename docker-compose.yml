@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  http-to-https-proxy:
+    build: .
+    container_name: http-to-https-proxy
+    ports:
+      - "${NGINX_HOST_PORT}:${NGINX_CONTAINER_PORT}"
+    environment:
+      - PROXY_PASS_URL=${PROXY_PASS_URL}
+    volumes:
+      - ${SSL_DIR}/server.crt:/etc/nginx/server.crt
+      - ${SSL_DIR}/server.key:/etc/nginx/server.key
