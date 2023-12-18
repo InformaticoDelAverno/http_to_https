@@ -1,32 +1,22 @@
 events {}
 
 http {
-    proxy_module on;
-    proxy_http_module on;
-    ssl_module on;
+    upstream backend {
+        # Define el servidor o servidores backend
+        server ${PROXY_PASS_URL};
+    }
+
     server {
         listen 443 ssl;
         ssl_certificate     /etc/nginx/server.crt;
         ssl_certificate_key /etc/nginx/server.key;
-        error_log /var/log/nginx/error.log debug;
-        server_name localhost;
 
         location / {
-            proxy_pass ${PROXY_PASS_URL};
+            proxy_pass http://backend;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Configuraciones adicionales
-            proxy_buffering off;
-            proxy_redirect off;
-
-            # Configuración para manejar el referer
-            proxy_set_header Referer http://$host$request_uri;
-            proxy_set_header Origin http://$host;
-            subs_filter 'https://$host' 'http://$host';
-            subs_filter_once off;
         }
     }
 }
