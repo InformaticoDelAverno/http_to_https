@@ -43,17 +43,25 @@ http {
             # proxy_set_header X-Forwarded-Proto $scheme;
             # proxy_set_header Referer http://${PROXY_PASS_URL};
 
-            # No alterar la respuesta del servidor
-            proxy_redirect off;
-            proxy_buffering off;
+
 
             # Opciones para manejo de conexiones
             proxy_http_version 1.1;
             proxy_set_header Connection "";
 
-            # Reescribir URLs de HTTP a HTTPS
+            # Desactivamos la compresion para que sub_filter funcione correctamente
+            proxy_set_header Accept-Encoding "";
+            gzip off;
+            # Reescribir el dominio en las respuestas
+            sub_filter 'http://${PROXY_PASS_URL}' 'https://localhost';
+            sub_filter 'https://${PROXY_PASS_URL}' 'https://localhost';
             sub_filter 'http://' 'https://';
-            sub_filter_once off;
+            sub_filter_once off; # Aplica el filtro a toda la respuesta
+            sub_filter_types *; # Aplicar a todos los tipos MIME
+
+            # No alterar la respuesta del servidor
+            # proxy_redirect off;
+            # proxy_buffering off;
         }
     }
 }
